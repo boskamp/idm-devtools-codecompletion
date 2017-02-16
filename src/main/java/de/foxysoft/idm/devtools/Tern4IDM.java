@@ -96,7 +96,7 @@ public class Tern4IDM {
 	private static void unzip(File jar, File toDir)
 			throws Exception {
 
-		final String M = "extractArtifcatsXml: ";
+		final String M = "unzip: ";
 		trc(M + "Enterig jar=" + jar + ", toDir=" + toDir);
 
 		byte[] buffer = new byte[1024];
