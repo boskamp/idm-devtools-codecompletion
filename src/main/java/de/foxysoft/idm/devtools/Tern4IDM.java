@@ -47,6 +47,11 @@ public class Tern4IDM {
 		return v;
 	}// getMandatoryParam
 
+	/**
+	 * Create this application's private directory if it doesn't exist yet. 
+	 * @return
+	 * @throws Exception
+	 */
 	private static File createAppDir() throws Exception {
 		String home = System.getProperty("user.home");
 		File appDir = new File(home, "." + EXE_NAME);
@@ -67,37 +72,63 @@ public class Tern4IDM {
 
 	}
 
-	private static File downloadArtifactsJar(String url, File toDir)
+	/**
+	 * Download file from URL into destination directory
+	 * @param fromUrl
+	 * @param toDir
+	 * @return
+	 * @throws Exception
+	 */
+	private static File downloadFile(String fromUrl, File toDir)
 			throws Exception {
-		final String M = "generateTypeLib: ";
-		trc(M + "Entering url=" + url);
-		final String filename = "artifacts.jar";
-		URL artifactsUrl = new URL(url + "/" + filename);
-		ReadableByteChannel rbc = Channels
-				.newChannel(artifactsUrl.openStream());
+		final String M = "downloadFile: ";
+		trc(M + "Entering fromUrl=" + fromUrl);
+
+		URL oUrl = new URL(fromUrl);
+		trc(M + "oUrl=" + oUrl);
+		String filename = new File(oUrl.getPath()).getName();
+		trc(M+"filename="+filename);
+
+		ReadableByteChannel rbc = null;
 		FileOutputStream fos = null;
-		File outputFile = null;
+		File outputFile = new File(toDir, filename);
+
 		try {
-			outputFile = new File(toDir, filename);
+			rbc = Channels.newChannel(oUrl.openStream());
+
 			fos = new FileOutputStream(outputFile);
 			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
 		} finally {
 			if (fos != null) {
 				try {
 					fos.flush();
+				} catch (Exception e) {
+				}
+				try {
 					fos.close();
 				} catch (Exception e) {
 				}
-			}
+			}// if (fos != null) {
+			if (rbc != null) {
+				try {
+					rbc.close();
+				} catch (Exception e) {
+				}
+			}// if (rbc != null) {
 		}// finally
 		return outputFile;
 	}
 
-	private static void unzip(File jar, File toDir)
-			throws Exception {
+	/**
+	 * Extract ZIP file into destination directory
+	 * @param zipFile
+	 * @param toDir
+	 * @throws Exception
+	 */
+	private static void unzipFile(File zipFile, File toDir) throws Exception {
 
-		final String M = "unzip: ";
-		trc(M + "Enterig jar=" + jar + ", toDir=" + toDir);
+		final String M = "unzipFile ";
+		trc(M + "Enterig jar=" + zipFile + ", toDir=" + toDir);
 
 		byte[] buffer = new byte[1024];
 		FileOutputStream fos = null;
@@ -105,7 +136,7 @@ public class Tern4IDM {
 
 		try {
 
-			zis = new ZipInputStream(new FileInputStream(jar));
+			zis = new ZipInputStream(new FileInputStream(zipFile));
 			ZipEntry ze = null;
 			File outParent = null;
 
@@ -126,7 +157,7 @@ public class Tern4IDM {
 								+ outParent.getCanonicalPath());
 					}
 				}
-				
+
 				try {
 					fos = new FileOutputStream(outFile);
 
@@ -160,12 +191,29 @@ public class Tern4IDM {
 		}// finally
 	}
 
+	/**
+	 * Perform actual business logic
+	 * @param line
+	 * @throws Exception
+	 */
 	private static void doWork(CommandLine line) throws Exception {
 		File appDir = createAppDir();
-		File jar = downloadArtifactsJar(getMandatoryParam(line, 'u'), appDir);
-		unzip(jar, appDir);
+		String url = getMandatoryParam(line, 'u');
+		if(!url.endsWith("/")) {
+			url+="/";
+		}
+		url+="artifacts.jar";
+		
+		File jar = downloadFile(url, appDir);
+		unzipFile(jar, appDir);
 	}
 
+	/**
+	 * Parse command line and show help, if required.
+	 * Otherwise call doWork() to perform actual business logic.
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 		final String M = "main: ";
 
