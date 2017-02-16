@@ -1,8 +1,10 @@
 package de.foxysoft.idm.devtools;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -10,12 +12,22 @@ import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.w3c.dom.Document;
 
 public class Tern4IDM {
 	private static class ShowMessageOnlyException extends Exception {
@@ -48,7 +60,8 @@ public class Tern4IDM {
 	}// getMandatoryParam
 
 	/**
-	 * Create this application's private directory if it doesn't exist yet. 
+	 * Create this application's private directory if it doesn't exist yet.
+	 * 
 	 * @return
 	 * @throws Exception
 	 */
@@ -74,6 +87,7 @@ public class Tern4IDM {
 
 	/**
 	 * Download file from URL into destination directory
+	 * 
 	 * @param fromUrl
 	 * @param toDir
 	 * @return
@@ -87,7 +101,7 @@ public class Tern4IDM {
 		URL oUrl = new URL(fromUrl);
 		trc(M + "oUrl=" + oUrl);
 		String filename = new File(oUrl.getPath()).getName();
-		trc(M+"filename="+filename);
+		trc(M + "filename=" + filename);
 
 		ReadableByteChannel rbc = null;
 		FileOutputStream fos = null;
@@ -121,6 +135,7 @@ public class Tern4IDM {
 
 	/**
 	 * Extract ZIP file into destination directory
+	 * 
 	 * @param zipFile
 	 * @param toDir
 	 * @throws Exception
@@ -191,26 +206,51 @@ public class Tern4IDM {
 		}// finally
 	}
 
+	private static String getIdmVersionFromXml(File xmlFile) throws Exception {
+		final String M = "getIdmVersionFromXml: ";
+		trc(M + "Entering xmlFile=" + xmlFile);
+		TransformerFactory tf = TransformerFactory.newInstance();
+		InputStream styleStream = Tern4IDM.class
+				.getResourceAsStream("fi_artifacts.xsl");
+		trc(M + "styleStream=" + styleStream);
+		Source s = new StreamSource(styleStream);
+		Transformer t = tf.newTransformer(s);
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document doc = db.parse(xmlFile);
+		Source xmlSource = new DOMSource(doc);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		StreamResult outputTarget = new StreamResult(baos);
+		t.transform(xmlSource, outputTarget);
+		String result = baos.toString(doc.getInputEncoding());
+		trc(M + "result=" + result);
+		return null;
+	}
+
 	/**
 	 * Perform actual business logic
+	 * 
 	 * @param line
 	 * @throws Exception
 	 */
 	private static void doWork(CommandLine line) throws Exception {
 		File appDir = createAppDir();
 		String url = getMandatoryParam(line, 'u');
-		if(!url.endsWith("/")) {
-			url+="/";
+		if (!url.endsWith("/")) {
+			url += "/";
 		}
-		url+="artifacts.jar";
-		
+		url += "artifacts.jar";
+
 		File jar = downloadFile(url, appDir);
 		unzipFile(jar, appDir);
+		String idmVersion = getIdmVersionFromXml(new File(appDir,
+				"artifacts.xml"));
 	}
 
 	/**
-	 * Parse command line and show help, if required.
-	 * Otherwise call doWork() to perform actual business logic.
+	 * Parse command line and show help, if required. Otherwise call doWork() to
+	 * perform actual business logic.
+	 * 
 	 * @param args
 	 * @throws Exception
 	 */
