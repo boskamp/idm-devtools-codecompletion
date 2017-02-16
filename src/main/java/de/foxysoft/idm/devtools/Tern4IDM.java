@@ -11,7 +11,7 @@ import org.apache.commons.cli.Options;
 public class Tern4IDM {
     private static boolean g_verbose;
 
-    private static final String EXE_NAME = "iac";
+    private static final String EXE_NAME = "t4i";
 
     private static void trc(String msg) {
         if (g_verbose) {
@@ -31,7 +31,7 @@ public class Tern4IDM {
         options.addOption(Option //
                           .builder("u") // short name
                           .longOpt("url") // long name
-                          .required(true) //
+                          .required(false) //
                           .desc("Eclipse Repository URL") // description
                           .hasArg() //
                           .argName("REPO_URL") //
@@ -76,12 +76,16 @@ public class Tern4IDM {
                 String lp = new String(alp);
                 String header = "Generate Tern typelib from SAP(R) IDM DevStudio help"
                     + br //
+                    + br //
+                    + "OPTIONS:" //
+                    + br //
                     ;
 
                 String footer = br //
                     + "EXAMPLES:"
                     + br //
                     + EXE_NAME +" -u https://tools.hana.ondemand.com/neon" //
+                    + br
                     + lp
                     + "Download help file from SAP(R) Eclipse Neon repository"
                     + br //
