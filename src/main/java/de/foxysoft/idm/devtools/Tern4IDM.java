@@ -206,13 +206,23 @@ public class Tern4IDM {
 		}// finally
 	}
 
-	private static String getIdmVersionFromXml(File xmlFile) throws Exception {
-		final String M = "getIdmVersionFromXml: ";
-		trc(M + "Entering xmlFile=" + xmlFile);
+	/**
+	 * Transform xmlFile using XSL stylesheet styleSheetName and return result as string  
+	 * @param xmlFile
+	 * @param styleSheetName
+	 * @return
+	 * @throws Exception
+	 */
+	private static String xslTransform(File xmlFile, String styleSheetName) throws Exception {
+		final String M = "xslTransform: ";
+		trc(M + "Entering xmlFile=" + xmlFile+", styleSheetName="+styleSheetName);
 		TransformerFactory tf = TransformerFactory.newInstance();
 		InputStream styleStream = Tern4IDM.class
-				.getResourceAsStream("fi_artifacts.xsl");
+				.getResourceAsStream(styleSheetName);
 		trc(M + "styleStream=" + styleStream);
+		if(styleStream == null) {
+			throw new Exception("XSL stylesheet "+styleSheetName+" not found");
+		}
 		Source s = new StreamSource(styleStream);
 		Transformer t = tf.newTransformer(s);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -224,7 +234,7 @@ public class Tern4IDM {
 		t.transform(xmlSource, outputTarget);
 		String result = baos.toString(doc.getInputEncoding());
 		trc(M + "result=" + result);
-		return null;
+		return result;
 	}
 
 	/**
@@ -234,6 +244,8 @@ public class Tern4IDM {
 	 * @throws Exception
 	 */
 	private static void doWork(CommandLine line) throws Exception {
+		final String M="doWork: ";
+		trc(M+"Entering line="+line);
 		File appDir = createAppDir();
 		String url = getMandatoryParam(line, 'u');
 		if (!url.endsWith("/")) {
@@ -243,8 +255,9 @@ public class Tern4IDM {
 
 		File jar = downloadFile(url, appDir);
 		unzipFile(jar, appDir);
-		String idmVersion = getIdmVersionFromXml(new File(appDir,
-				"artifacts.xml"));
+		String idmVersion = xslTransform(new File(appDir,
+				"artifacts.xml"), "fi_artifacts.xsl");
+		trc(M+"idmVersion="+idmVersion);
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright 2016 Foxysoft GmbH
+Copyright 2017 Foxysoft GmbH
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@ limitations under the License.
 
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-  <xsl:output indent="yes"/>
-  <xsl:strip-space elements="*"/>
+  <xsl:output method="text"/>
   <xsl:template match="@*|node()">
-    <xsl:copy>
       <xsl:apply-templates select="@*|node()"/>
-    </xsl:copy>
+  </xsl:template>
+  <xsl:template match="/repository/artifacts/artifact[@id='com.sap.idm.dev-ui-help']/@version">
+      <xsl:value-of select="."/>
   </xsl:template>
 </xsl:stylesheet>
