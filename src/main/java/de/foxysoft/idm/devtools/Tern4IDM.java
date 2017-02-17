@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -106,30 +107,31 @@ public class Tern4IDM {
 		ReadableByteChannel rbc = null;
 		FileOutputStream fos = null;
 		File outputFile = new File(toDir, filename);
+		if (!outputFile.exists()) {
+			try {
+				rbc = Channels.newChannel(oUrl.openStream());
 
-		try {
-			rbc = Channels.newChannel(oUrl.openStream());
-
-			fos = new FileOutputStream(outputFile);
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-		} finally {
-			if (fos != null) {
-				try {
-					fos.flush();
-				} catch (Exception e) {
-				}
-				try {
-					fos.close();
-				} catch (Exception e) {
-				}
-			}// if (fos != null) {
-			if (rbc != null) {
-				try {
-					rbc.close();
-				} catch (Exception e) {
-				}
-			}// if (rbc != null) {
-		}// finally
+				fos = new FileOutputStream(outputFile);
+				fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+			} finally {
+				if (fos != null) {
+					try {
+						fos.flush();
+					} catch (Exception e) {
+					}
+					try {
+						fos.close();
+					} catch (Exception e) {
+					}
+				}// if (fos != null) {
+				if (rbc != null) {
+					try {
+						rbc.close();
+					} catch (Exception e) {
+					}
+				}// if (rbc != null) {
+			}// finally
+		}
 		return outputFile;
 	}
 
@@ -207,21 +209,27 @@ public class Tern4IDM {
 	}
 
 	/**
-	 * Transform xmlFile using XSL stylesheet styleSheetName and return result as string  
+	 * Transform xmlFile using XSL stylesheet styleSheetName and return result
+	 * as string
+	 * 
 	 * @param xmlFile
 	 * @param styleSheetName
 	 * @return
 	 * @throws Exception
 	 */
-	private static String xslTransform(File xmlFile, String styleSheetName) throws Exception {
+	private static String xslTransform(File xmlFile, String styleSheetName)
+			throws Exception {
 		final String M = "xslTransform: ";
-		trc(M + "Entering xmlFile=" + xmlFile+", styleSheetName="+styleSheetName);
-		TransformerFactory tf = TransformerFactory.newInstance();
+		trc(M + "Entering xmlFile=" + xmlFile + ", styleSheetName="
+				+ styleSheetName);
+		// Use Saxon to support XSLT 2.0
+		TransformerFactory tf = new net.sf.saxon.TransformerFactoryImpl();
 		InputStream styleStream = Tern4IDM.class
 				.getResourceAsStream(styleSheetName);
 		trc(M + "styleStream=" + styleStream);
-		if(styleStream == null) {
-			throw new Exception("XSL stylesheet "+styleSheetName+" not found");
+		if (styleStream == null) {
+			throw new Exception("XSL stylesheet " + styleSheetName
+					+ " not found");
 		}
 		Source s = new StreamSource(styleStream);
 		Transformer t = tf.newTransformer(s);
@@ -229,12 +237,51 @@ public class Tern4IDM {
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document doc = db.parse(xmlFile);
 		Source xmlSource = new DOMSource(doc);
+
+		// Must set system ID to avoid
+		// XTDE1162: Relative URI passed to document() function
+		xmlSource.setSystemId(xmlFile.getCanonicalPath());
+		trc(M + "xmlSource.getSystemId()=" + xmlSource.getSystemId());
+
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		StreamResult outputTarget = new StreamResult(baos);
 		t.transform(xmlSource, outputTarget);
 		String result = baos.toString(doc.getInputEncoding());
-		trc(M + "result=" + result);
 		return result;
+	}
+
+	/**
+	 * Write string to file without any implicit charset conversion,
+	 * as would be done by java.io.PrintStream 
+	 * @param content
+	 * @param charsetName
+	 * @param parent
+	 * @param filename
+	 * @return
+	 * @throws Exception
+	 */
+	private static File writeFile(String content, String charsetName,
+			File parent, String filename) throws Exception {
+		FileOutputStream fos = null;
+		File outputFile = null;
+		try {
+			outputFile = new File(parent, filename);
+			byte[] contentBytes = content.getBytes(charsetName);
+			fos = new FileOutputStream(outputFile);
+			fos.write(contentBytes, 0, contentBytes.length);
+		} finally {
+			if (fos != null) {
+				try {
+					fos.flush();
+				} catch (Exception e) {
+				}
+				try {
+					fos.close();
+				} catch (Exception e) {
+				}
+			}// if (fos != null) {
+		}// finally
+		return outputFile;
 	}
 
 	/**
@@ -244,20 +291,36 @@ public class Tern4IDM {
 	 * @throws Exception
 	 */
 	private static void doWork(CommandLine line) throws Exception {
-		final String M="doWork: ";
-		trc(M+"Entering line="+line);
+		final String M = "doWork: ";
+		trc(M + "Entering line=" + line);
 		File appDir = createAppDir();
-		String url = getMandatoryParam(line, 'u');
-		if (!url.endsWith("/")) {
-			url += "/";
-		}
-		url += "artifacts.jar";
+		String baseUrl = getMandatoryParam(line, 'u');
 
-		File jar = downloadFile(url, appDir);
-		unzipFile(jar, appDir);
-		String idmVersion = xslTransform(new File(appDir,
-				"artifacts.xml"), "fi_artifacts.xsl");
-		trc(M+"idmVersion="+idmVersion);
+		if (!baseUrl.endsWith("/")) {
+			baseUrl += "/";
+		}
+		trc(M + "baseUrl=" + baseUrl);
+
+		String artifactsJarUrl = baseUrl + "artifacts.jar";
+		File artifactsJarFile = downloadFile(artifactsJarUrl, appDir);
+		unzipFile(artifactsJarFile, appDir);
+
+		String idmVersion = xslTransform(new File(appDir, "artifacts.xml"),
+				"fi_artifacts.xsl");
+		trc(M + "idmVersion=" + idmVersion);
+
+		String helpJarUrl = baseUrl + "plugins/com.sap.idm.dev-ui-help_"
+				+ idmVersion + ".jar";
+		File helpJarFile = downloadFile(helpJarUrl, appDir);
+		unzipFile(helpJarFile, appDir);
+
+		File tocFile = new File(appDir, "toc.xml");
+
+		String result = xslTransform(tocFile, "fi_help_to_xml.xsl");
+		trc(M + "result=" + result);
+		
+		writeFile(result, "UTF-8", appDir, "idm_internal_functions_"+idmVersion+".xml");
+
 	}
 
 	/**
