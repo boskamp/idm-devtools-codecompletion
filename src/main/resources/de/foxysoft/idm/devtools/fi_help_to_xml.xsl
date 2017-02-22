@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -107,7 +107,7 @@ limitations under the License.
         <xsl:value-of select="normalize-space($lv_description)"/>
       </xsl:element>
 
-      <xsl:element name="input-parameters">
+      <xsl:element name="parameters">
         <xsl:for-each
             select="$iv_xhtml_content//span[@class='keyword parmname']">
 
@@ -146,22 +146,23 @@ limitations under the License.
           </xsl:if>
 
         </xsl:for-each>
-      </xsl:element><!-- input-parameters -->
 
-      <xsl:if test="string-length($lv_out_param) &gt; 0">
+        <xsl:if test="string-length($lv_out_param) &gt; 0">
 
-        <xsl:element name="output-parameter">
-          <xsl:attribute name="name">
-            <xsl:value-of select="$lv_out_param"/>
-          </xsl:attribute>
-          <xsl:element name="description">
-            <!-- <xsl:value-of -->
-            <!--     select="normalize-space($lv_param_description)"/> -->
+          <xsl:element name="output-parameter">
+            <xsl:attribute name="name">
+              <xsl:value-of select="$lv_out_param"/>
+            </xsl:attribute>
+            <xsl:element name="description">
+              <!-- <xsl:value-of -->
+              <!--     select="normalize-space($lv_param_description)"/> -->
+            </xsl:element>
           </xsl:element>
-        </xsl:element>
 
-      </xsl:if>
-    </xsl:element>
+        </xsl:if>
+      </xsl:element><!-- parameters -->
+
+    </xsl:element><!--function -->
 
   </xsl:template>
 

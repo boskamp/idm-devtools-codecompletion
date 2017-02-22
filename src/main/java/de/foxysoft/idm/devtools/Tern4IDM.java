@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -316,11 +315,13 @@ public class Tern4IDM {
 
 		File tocFile = new File(appDir, "toc.xml");
 
-		String result = xslTransform(tocFile, "fi_help_to_xml.xsl");
-		trc(M + "result=" + result);
+		String helpXmlContent = xslTransform(tocFile, "fi_help_to_xml.xsl");
 		
-		writeFile(result, "UTF-8", appDir, "idm_internal_functions_"+idmVersion+".xml");
+		File helpXmlFile = writeFile(helpXmlContent, "UTF-8", appDir, "idm_internal_functions_"+idmVersion+".xml");
 
+		String jsonContent = xslTransform(helpXmlFile, "fi_xml_to_json.xsl");
+		File jsonFile = writeFile(jsonContent, "UTF-8", appDir, "idm_ternlib_"+idmVersion+".json");
+		System.out.println("Generated "+jsonFile.getCanonicalPath());
 	}
 
 	/**
