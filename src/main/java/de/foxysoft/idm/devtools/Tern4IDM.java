@@ -162,6 +162,9 @@ public class Tern4IDM {
 				}
 				String outFileName = ze.getName();
 				File outFile = new File(toDir + File.separator + outFileName);
+				if(outFile.exists()) {
+					continue;
+				}
 
 				trc(M + "Processing " + outFile.getCanonicalPath());
 

@@ -21,7 +21,7 @@ limitations under the License.
 	<xsl:template match="@*|node()">
 		<xsl:apply-templates select="@*|node()" />
 	</xsl:template>
-	<xsl:template match="/">
+	<xsl:template match="functions">
 		<xsl:text>{"!name":"idm",</xsl:text>
 		<xsl:copy>
 			<!-- Context position of the CURRENT function -->
@@ -29,7 +29,7 @@ limitations under the License.
 			<!-- INSIDE the function template rule, so we must -->
 			<!-- set up a context sequence that only contains -->
 			<!-- function elements, nothing else. -->
-			<xsl:apply-templates select="//function" />
+			<xsl:apply-templates select="function" />
 		</xsl:copy>
 		<xsl:text>}</xsl:text>
 	</xsl:template>
@@ -38,7 +38,7 @@ limitations under the License.
 		<xsl:value-of select="@name" />
 		<xsl:text>":{</xsl:text>
 		<xsl:copy>
-			<xsl:apply-templates select="@*|node()" />
+			<xsl:apply-templates select="*" />
 		</xsl:copy>
 		<xsl:text>}</xsl:text>
 		<xsl:if test="not(position()=last())">
@@ -62,7 +62,7 @@ limitations under the License.
 			<xsl:text>?</xsl:text>
 		</xsl:if>
 		<xsl:text>: string</xsl:text>
-		<xsl:if test="following-sibling::*[1][self::input-parameter]">
+		<xsl:if test="not(position()=last())">
 			<xsl:text>, </xsl:text>
 		</xsl:if>
 	</xsl:template>
