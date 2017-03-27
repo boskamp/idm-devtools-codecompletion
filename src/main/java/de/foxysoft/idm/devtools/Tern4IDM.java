@@ -9,6 +9,9 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -162,7 +165,7 @@ public class Tern4IDM {
 				}
 				String outFileName = ze.getName();
 				File outFile = new File(toDir + File.separator + outFileName);
-				if(outFile.exists()) {
+				if (outFile.exists()) {
 					continue;
 				}
 
@@ -219,8 +222,8 @@ public class Tern4IDM {
 	 * @return
 	 * @throws Exception
 	 */
-	private static String xslTransform(File xmlFile, String styleSheetName)
-			throws Exception {
+	private static String xslTransform(File xmlFile, String styleSheetName,
+			Map<String, String> xslParams) throws Exception {
 		final String M = "xslTransform: ";
 		trc(M + "Entering xmlFile=" + xmlFile + ", styleSheetName="
 				+ styleSheetName);
@@ -235,6 +238,16 @@ public class Tern4IDM {
 		}
 		Source s = new StreamSource(styleStream);
 		Transformer t = tf.newTransformer(s);
+		if (xslParams != null) {
+			Iterator<Map.Entry<String, String>> iter = xslParams.entrySet()
+					.iterator();
+			while (iter.hasNext()) {
+				Map.Entry<String, String> next = iter.next();
+				trc(M + "Setting parameter " + next.getKey() + "="
+						+ next.getValue());
+				t.setParameter(next.getKey(), next.getValue());
+			}
+		}// if(xslParams != null)
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document doc = db.parse(xmlFile);
@@ -252,9 +265,15 @@ public class Tern4IDM {
 		return result;
 	}
 
+	private static String xslTransform(File xmlFile, String styleSheetName)
+			throws Exception {
+		return xslTransform(xmlFile, styleSheetName, null);
+	}
+
 	/**
-	 * Write string to file without any implicit charset conversion,
-	 * as would be done by java.io.PrintStream 
+	 * Write string to file without any implicit charset conversion, as would be
+	 * done by java.io.PrintStream
+	 * 
 	 * @param content
 	 * @param charsetName
 	 * @param parent
@@ -319,12 +338,19 @@ public class Tern4IDM {
 		File tocFile = new File(appDir, "toc.xml");
 
 		String helpXmlContent = xslTransform(tocFile, "fi_help_to_xml.xsl");
-		
-		File helpXmlFile = writeFile(helpXmlContent, "UTF-8", appDir, "idm_internal_functions_"+idmVersion+".xml");
+
+		File helpXmlFile = writeFile(helpXmlContent, "UTF-8", appDir,
+				"idm_internal_functions_" + idmVersion + ".xml");
 
 		String jsonContent = xslTransform(helpXmlFile, "fi_xml_to_json.xsl");
-		File jsonFile = writeFile(jsonContent, "UTF-8", appDir, "idm_ternlib_"+idmVersion+".json");
-		System.out.println("Generated "+jsonFile.getCanonicalPath());
+		File jsonFile = writeFile(jsonContent, "UTF-8", appDir, "idm_ternlib_"
+				+ idmVersion + ".json");
+		System.out.println("Generated " + jsonFile.getCanonicalPath());
+
+		Map<String, String> xslParams = new HashMap<String, String>();
+		xslParams.put("iv_output_dir", appDir.getCanonicalPath());
+		xslTransform(helpXmlFile, "fi_xml_to_yas.xsl", xslParams);
+		System.out.println("Generated snippets for YASnippet");
 	}
 
 	/**
