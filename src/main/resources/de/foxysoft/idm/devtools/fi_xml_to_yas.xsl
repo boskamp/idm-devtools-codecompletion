@@ -42,10 +42,35 @@ limitations under the License.
       <xsl:text>(</xsl:text>
       <xsl:value-of select="$BR"/>
       <xsl:copy>
-        <xsl:apply-templates select="*" />
+        <xsl:apply-templates select="parameters/input-parameter" />
       </xsl:copy>
       <xsl:text>)$0</xsl:text>
       <xsl:value-of select="$BR"/>
     </xsl:result-document>
+  </xsl:template>
+  <xsl:template match="input-parameter">
+    <xsl:choose>
+      <!-- Mandatory input parameter -->
+      <xsl:when test="@optional = 'false'">
+        <xsl:if test="not(position() = 1)">
+          <xsl:text>,</xsl:text>
+        </xsl:if>
+        <xsl:text>${</xsl:text>
+        <xsl:value-of select="position()"/>
+        <xsl:text>:</xsl:text>
+        <xsl:value-of select="@name"/>
+        <xsl:text>}</xsl:text>
+      </xsl:when>
+      <!-- Optional input parameter -->
+      <xsl:otherwise>
+        <xsl:text>/*</xsl:text>
+        <xsl:if test="not(position() = 1)">
+          <xsl:text>,</xsl:text>
+        </xsl:if>
+        <xsl:value-of select="@name"/>
+        <xsl:text>*/</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:value-of select="$BR"/>
   </xsl:template>
 </xsl:stylesheet>
