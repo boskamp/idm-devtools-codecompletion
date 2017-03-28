@@ -45,6 +45,8 @@ public class Tern4IDM {
 	private static final String EXE_NAME = "t4i";
 
 	private static boolean g_verbose;
+	
+	private static boolean g_force;
 
 	private static void trc(String msg) {
 		if (g_verbose) {
@@ -109,7 +111,7 @@ public class Tern4IDM {
 		ReadableByteChannel rbc = null;
 		FileOutputStream fos = null;
 		File outputFile = new File(toDir, filename);
-		if (!outputFile.exists()) {
+		if (g_force || !outputFile.exists()) {
 			try {
 				rbc = Channels.newChannel(oUrl.openStream());
 
@@ -165,7 +167,7 @@ public class Tern4IDM {
 				}
 				String outFileName = ze.getName();
 				File outFile = new File(toDir + File.separator + outFileName);
-				if (outFile.exists()) {
+				if (!g_force && outFile.exists()) {
 					continue;
 				}
 
@@ -395,6 +397,13 @@ public class Tern4IDM {
 				.build());
 
 		options.addOption(Option //
+				.builder("f") // short name
+				.longOpt("force") // long name
+				.required(false) //
+				.desc("Force overwrite existing files") // description
+				.build());
+
+		options.addOption(Option //
 				.builder("h") // short name
 				.longOpt("help") // long name
 				.required(false) //
@@ -414,6 +423,7 @@ public class Tern4IDM {
 				trc(M + "Entering args=" + args);
 				trc(M + "CLASSPATH=" + System.getProperty("java.class.path"));
 
+				g_force = line.hasOption('f');
 				doWork(line);
 
 			}// if(!line.hasOption('h'))
