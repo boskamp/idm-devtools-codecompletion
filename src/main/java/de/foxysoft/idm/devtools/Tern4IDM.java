@@ -45,7 +45,7 @@ public class Tern4IDM {
 	private static final String EXE_NAME = "t4i";
 
 	private static boolean g_verbose;
-	
+
 	private static boolean g_force;
 
 	private static void trc(String msg) {
@@ -88,6 +88,40 @@ public class Tern4IDM {
 		}
 		return appDir;
 
+	}
+
+	private static class WorkDirs {
+		File root;
+		File jars;
+		File html;
+		File tern;
+		File snippets;
+	}
+
+	private static WorkDirs createWorkDirs(File parent, String idmVersion)
+			throws Exception {
+		WorkDirs result = new WorkDirs();
+		result.root = createDirectory(parent, idmVersion);
+		result.jars = createDirectory(result.root, "jars");
+		result.html = createDirectory(result.root, "html");
+		result.tern = createDirectory(result.root, "tern");
+		result.snippets = createDirectory(result.root, "snippets");
+		return result;
+	}
+
+	private static File createDirectory(File parent, String name)
+			throws Exception {
+		boolean result;
+		File dir;
+		dir = new File(parent, name);
+		if (!dir.exists()) {
+			result = dir.mkdir();
+			if (!result) {
+				throw new Exception("Failed to create "
+						+ dir.getCanonicalPath());
+			}
+		}
+		return dir;
 	}
 
 	/**
@@ -322,6 +356,7 @@ public class Tern4IDM {
 		if (!baseUrl.endsWith("/")) {
 			baseUrl += "/";
 		}
+
 		trc(M + "baseUrl=" + baseUrl);
 
 		String artifactsJarUrl = baseUrl + "artifacts.jar";
@@ -332,27 +367,30 @@ public class Tern4IDM {
 				"fi_artifacts.xsl");
 		trc(M + "idmVersion=" + idmVersion);
 
+		WorkDirs w = createWorkDirs(appDir, idmVersion);
+
 		String helpJarUrl = baseUrl + "plugins/com.sap.idm.dev-ui-help_"
 				+ idmVersion + ".jar";
-		File helpJarFile = downloadFile(helpJarUrl, appDir);
-		unzipFile(helpJarFile, appDir);
+		File helpJarFile = downloadFile(helpJarUrl, w.jars);
+		unzipFile(helpJarFile, w.html);
 
-		File tocFile = new File(appDir, "toc.xml");
+		File tocFile = new File(w.html, "toc.xml");
 
 		String helpXmlContent = xslTransform(tocFile, "fi_help_to_xml.xsl");
 
-		File helpXmlFile = writeFile(helpXmlContent, "UTF-8", appDir,
+		File helpXmlFile = writeFile(helpXmlContent, "UTF-8", w.root,
 				"idm_internal_functions_" + idmVersion + ".xml");
 
 		String jsonContent = xslTransform(helpXmlFile, "fi_xml_to_json.xsl");
-		File jsonFile = writeFile(jsonContent, "UTF-8", appDir, "idm_ternlib_"
+		File jsonFile = writeFile(jsonContent, "UTF-8", w.tern, "idm_ternlib_"
 				+ idmVersion + ".json");
 		System.out.println("Generated " + jsonFile.getCanonicalPath());
 
 		Map<String, String> xslParams = new HashMap<String, String>();
-		xslParams.put("iv_output_dir", appDir.getCanonicalPath());
-		xslTransform(helpXmlFile, "fi_xml_to_yas.xsl", xslParams);
-		System.out.println("Generated snippets for YASnippet");
+		xslParams.put("iv_output_dir", w.snippets.getCanonicalPath());
+		xslTransform(helpXmlFile, "fi_xml_to_snippets.xsl", xslParams);
+		System.out.println("Generated snippets for YASnippet into "
+				+ w.snippets.getCanonicalPath());
 	}
 
 	/**
