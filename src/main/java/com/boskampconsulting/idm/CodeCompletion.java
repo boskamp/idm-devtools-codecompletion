@@ -1,4 +1,4 @@
-package de.foxysoft.idm.devtools;
+package com.boskampconsulting.idm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,7 +32,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.w3c.dom.Document;
 
-public class Tern4IDM {
+public class CodeCompletion {
 	private static class ShowMessageOnlyException extends Exception {
 		static final long serialVersionUID = 1L;
 
@@ -42,7 +42,7 @@ public class Tern4IDM {
 
 	}
 
-	private static final String EXE_NAME = "t4i";
+	private static final String EXE_NAME = "idmcc";
 
 	private static boolean g_verbose;
 
@@ -265,7 +265,7 @@ public class Tern4IDM {
 				+ styleSheetName);
 		// Use Saxon to support XSLT 2.0
 		TransformerFactory tf = new net.sf.saxon.TransformerFactoryImpl();
-		InputStream styleStream = Tern4IDM.class
+		InputStream styleStream = CodeCompletion.class
 				.getResourceAsStream(styleSheetName);
 		trc(M + "styleStream=" + styleStream);
 		if (styleStream == null) {
@@ -472,7 +472,7 @@ public class Tern4IDM {
 				char[] alp = new char[formatter.getLeftPadding()];
 				Arrays.fill(alp, ' ');
 				String lp = new String(alp);
-				String header = "Generate Tern typelib from SAP(R) IDM DevStudio help"
+				String header = "Generate code completion metadata for SAP(R) Identity Management"
 						+ br //
 						+ br //
 						+ "OPTIONS:" //
@@ -509,4 +509,4 @@ public class Tern4IDM {
 		}
 	}// main
 
-}// Tern4IDM
+}// CodeCompletion
