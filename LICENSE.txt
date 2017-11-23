@@ -230,3 +230,6 @@
    Center Ltd, which is available under a Thai Open Source Software
    Center license.
    For details, see licenses/THAI.txt.
+
+   This product bundles Apache Commons CLI 1.3.1, copyright The Apache
+   Software Foundation, which is available under an Apache License 2.0.

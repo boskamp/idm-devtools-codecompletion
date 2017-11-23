@@ -1,0 +1,8 @@
+idm-devtools-codecompletion
+Copyright 2017 Lambert Boskamp
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+This product includes the Saxon XSLT and XQuery Processor 
+from Saxonica Limited (http://www.saxonica.com/).
