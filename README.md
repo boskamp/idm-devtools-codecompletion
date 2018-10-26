@@ -2,7 +2,7 @@
 JavaScript code completion for SAP&reg; Identity Management
 
 ## About
-This a command line tool for generating code completion metadata for the JavaScript API of [SAP&reg; Identity Management (IDM)](http://go.sap.com/product/technology-platform/identity-management.html). It supports the following code completion systems:
+This a command line tool for generating code completion metadata for the JavaScript API of [SAP&reg; Identity Management (IDM)](https://www.sap.com/products/identity-management.html). It supports the following code completion systems:
 
 * [YASnippet](http://joaotavora.github.com/yasnippet/) for GNU Emacs
 * [Tern](http://ternjs.net/) for GNU Emacs, Vim, Eclipse and others
